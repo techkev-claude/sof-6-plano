@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Karte – {{ trip.title }}{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="p-4">
+  <div class="flex items-center gap-2 mb-3 text-sm">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="text-zinc-400 hover:text-zinc-200">{{ trip.title }}</a>
+    <span class="text-zinc-600">/</span><span class="text-zinc-300">Karte</span>
+  </div>
+  <div id="map" class="w-full rounded-xl border border-zinc-700" style="height: calc(100vh - 120px);"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+<script>
+const tripData = {{ trip.to_snapshot_dict() | tojson }};
+initMap('map', tripData);
+</script>
+{% endblock %}

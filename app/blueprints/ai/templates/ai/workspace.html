@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}KI-Assistent – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+  <div class="flex items-center gap-2 mb-4 text-sm">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="text-zinc-400 hover:text-zinc-200">{{ trip.title }}</a>
+    <span class="text-zinc-600">/</span><span class="text-zinc-300">KI-Assistent</span>
+  </div>
+  {% if not ai_enabled %}
+  <div class="bg-amber-900/30 border border-amber-500/50 rounded-xl p-5 text-center">
+    <p class="text-amber-300 font-medium">🤖 Kein KI-API-Key konfiguriert</p>
+    <p class="text-zinc-400 text-sm mt-1">Gehe zu <a href="{{ url_for('admin.config') }}" class="text-indigo-400 hover:underline">Admin → Konfiguration</a> und füge einen Anthropic- oder OpenAI-API-Key ein.</p>
+  </div>
+  {% else %}
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-4" x-data="aiWorkspace({{ trip.id }})">
+    <div class="h-80 overflow-y-auto mb-4 space-y-3" id="chat-messages">
+      <template x-for="msg in messages" :key="msg.id">
+        <div class="flex gap-3" :class="msg.role === 'user' ? 'justify-end' : ''">
+          <div class="max-w-xs px-4 py-2 rounded-xl text-sm"
+               :class="msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-zinc-700 text-zinc-200'"
+               x-text="msg.content"></div>
+        </div>
+      </template>
+    </div>
+    <div class="flex gap-2">
+      <input type="text" x-model="input" @keydown.enter="sendMessage()"
+             placeholder="Frage den KI-Assistenten..."
+             class="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <button @click="sendMessage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium">Senden</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function aiWorkspace(tripId) {
+  return { tripId, messages: [], input: '',
+    sendMessage() {
+      if (!this.input.trim()) return;
+      this.messages.push({ id: Date.now(), role: 'user', content: this.input });
+      const msg = this.input; this.input = '';
+      fetch(`/api/trips/${this.tripId}/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '' },
+        body: JSON.stringify({ message: msg })
+      }).then(r => r.json()).then(d => {
+        this.messages.push({ id: Date.now(), role: 'assistant', content: d.response || d.error || 'Fehler' });
+      });
+    }
+  }
+}
+</script>
+{% endblock %}

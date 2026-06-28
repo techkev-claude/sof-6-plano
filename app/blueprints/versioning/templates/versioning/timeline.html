@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Versionen – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-4 text-sm">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="text-zinc-400 hover:text-zinc-200">{{ trip.title }}</a>
+    <span class="text-zinc-600">/</span><span class="text-zinc-300">Versionen</span>
+  </div>
+  <h1 class="text-2xl font-bold text-zinc-100 mb-6">Versions-Timeline</h1>
+
+  <div class="space-y-3">
+    {% for v in versions %}
+    <div class="relative pl-6">
+      <div class="absolute left-0 top-3 w-3 h-3 rounded-full border-2
+                  {{ 'bg-indigo-500 border-indigo-400 w-4 h-4 -left-0.5' if v.is_major else 'bg-zinc-600 border-zinc-500' }}"></div>
+      <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-4 {{ 'border-indigo-500/30' if v.is_major }}">
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-xs font-mono text-indigo-400">{{ v.version_string }}</span>
+            {% if v.is_major %}<span class="ml-2 text-xs bg-indigo-900 text-indigo-300 px-1.5 py-0.5 rounded">Major</span>{% endif %}
+            {% if v.commit_message %}<p class="text-sm text-zinc-200 mt-1">{{ v.commit_message }}</p>{% endif %}
+            <p class="text-xs text-zinc-500 mt-1">{{ v.created_at.strftime('%d.%m.%Y %H:%M') }} · {{ v.created_by.username }}</p>
+          </div>
+          <form method="POST" action="{{ url_for('versioning.restore_version', trip_id=trip.id, version_id=v.id) }}"
+                onsubmit="return confirm('Version wiederherstellen?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="text-xs px-2 py-1 bg-zinc-700 hover:bg-zinc-600 rounded transition-colors">Wiederherstellen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-zinc-500 text-sm">Noch keine Versionen.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

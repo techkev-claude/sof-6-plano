@@ -1,0 +1,11 @@
+<div x-show="modalOpen" x-cloak
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+     @keydown.escape.window="modalOpen = false">
+  <div class="bg-zinc-800 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6" @click.stop>
+    <div class="flex items-start justify-between mb-4">
+      <h3 class="text-lg font-semibold text-zinc-100" x-text="modalTitle"></h3>
+      <button @click="modalOpen = false" class="text-zinc-400 hover:text-zinc-200 ml-4">✕</button>
+    </div>
+    <div x-html="modalBody"></div>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Kalender – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-4 max-w-6xl mx-auto">
+  <div class="flex items-center gap-2 mb-4">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="text-zinc-400 hover:text-zinc-200 text-sm">← {{ trip.title }}</a>
+    <span class="text-zinc-600">/</span>
+    <span class="text-zinc-300 text-sm">Kalender</span>
+    <a href="{{ url_for('planner.timeline', trip_id=trip.id) }}" class="ml-auto text-xs px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded-lg">Zeitstrahl</a>
+  </div>
+
+  <!-- Calendar grid -->
+  {% set start = trip.start_date %}
+  {% set day_count = (trip.end_date - trip.start_date).days + 1 %}
+
+  <div class="grid gap-3" style="grid-template-columns: 60px repeat({{ [day_count, 7]|min }}, 1fr);">
+    <!-- Hour column -->
+    <div></div>
+    {% for i in range([day_count, 7]|min) %}
+    {% set day_offset = start.toordinal() + i - start.toordinal() %}
+    <div class="text-center text-xs font-medium text-zinc-400 pb-2 border-b border-zinc-700">
+      Tag {{ i + 1 }}
+    </div>
+    {% endfor %}
+
+    {% for h in range(8, 23) %}
+    <div class="text-right pr-2 text-xs text-zinc-600 py-3">{{ '%02d:00'|format(h) }}</div>
+    {% for i in range([day_count, 7]|min) %}
+    <div class="border border-zinc-800 rounded min-h-[48px] p-1 relative">
+      {% for leg in trip.legs %}
+        {% for block in leg.time_blocks %}
+          {% if block.start_datetime.hour == h %}
+          <div class="absolute inset-x-1 top-0.5 rounded px-1 text-xs truncate"
+               style="background-color: {{ leg.color }}33; color: {{ leg.color }}; height: {{ block.duration_minutes / 60 * 48 }}px;">
+            {{ block.title }}
+          </div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

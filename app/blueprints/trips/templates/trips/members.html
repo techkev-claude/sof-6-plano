@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Mitglieder – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-xl mx-auto">
+  <div class="flex items-center gap-2 text-sm text-zinc-400 mb-4">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="hover:text-zinc-200">{{ trip.title }}</a>
+    <span>/</span><span>Mitglieder</span>
+  </div>
+  <h1 class="text-2xl font-bold text-zinc-100 mb-6">Mitglieder verwalten</h1>
+
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-6 mb-6">
+    <h2 class="font-semibold text-zinc-100 mb-4">Mitglied hinzufügen</h2>
+    <form method="POST" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">{{ form.username_or_email.label(class="block text-sm font-medium text-zinc-300 mb-1") }}
+        {{ form.username_or_email(class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500") }}
+      </div>
+      <div class="mb-4">{{ form.permission.label(class="block text-sm font-medium text-zinc-300 mb-1") }}
+        {{ form.permission(class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500") }}
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 rounded-lg py-2 text-sm font-medium transition-colors">Hinzufügen</button>
+    </form>
+  </div>
+
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-4">
+    <h2 class="font-semibold text-zinc-100 mb-3">Aktuelle Mitglieder</h2>
+    <div class="flex items-center justify-between py-2 border-b border-zinc-700">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold">{{ trip.owner.username[0].upper() }}</div>
+        <span class="text-sm text-zinc-200">{{ trip.owner.username }}</span>
+      </div>
+      <span class="text-xs text-zinc-500">Eigentümer</span>
+    </div>
+    {% for m in trip.members %}{% if m.user_id != trip.owner_id %}
+    <div class="flex items-center justify-between py-2">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-zinc-600 flex items-center justify-center text-xs">{{ m.user.username[0].upper() }}</div>
+        <span class="text-sm text-zinc-200">{{ m.user.username }}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-zinc-500">{{ m.permission }}</span>
+        <form method="POST" action="{{ url_for('trips.remove_member', trip_id=trip.id, user_id=m.user_id) }}" onsubmit="return confirm('Mitglied entfernen?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="text-xs text-red-400 hover:text-red-300">Entfernen</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+{% endblock %}

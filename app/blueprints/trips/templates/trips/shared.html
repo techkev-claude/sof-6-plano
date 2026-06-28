@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}{{ trip.title }} (Ansicht){% endblock %}
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+  <div class="bg-zinc-800 rounded-xl border border-amber-500/30 p-3 mb-6 text-sm text-amber-300 flex items-center gap-2">
+    <span>👁️</span> Nur-Lese-Ansicht – Keine Anmeldung erforderlich
+  </div>
+  <h1 class="text-2xl font-bold text-zinc-100 mb-2">{{ trip.title }}</h1>
+  {% if trip.destination %}<p class="text-zinc-400 mb-4">📍 {{ trip.destination }}</p>{% endif %}
+  <p class="text-sm text-zinc-500 mb-6">{{ trip.start_date.strftime('%d.%m.%Y') }} – {{ trip.end_date.strftime('%d.%m.%Y') }}</p>
+
+  {% for leg in trip.legs %}
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-5 mb-4">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-3 h-3 rounded-full" style="background-color: {{ leg.color }}"></div>
+      <h2 class="font-semibold text-zinc-100">{{ leg.title }}</h2>
+      <span class="text-xs text-zinc-500 ml-auto">{{ leg.start_date.strftime('%d.%m.%Y') }} – {{ leg.end_date.strftime('%d.%m.%Y') }}</span>
+    </div>
+    {% for block in leg.time_blocks %}
+    <div class="flex items-start gap-3 py-2 border-t border-zinc-700">
+      <span class="text-sm mt-0.5">
+        {% if block.block_type == 'sightseeing' %}🏛️
+        {% elif block.block_type == 'food' %}🍽️
+        {% elif block.block_type == 'transport' %}🚇
+        {% elif block.block_type == 'accommodation' %}🏨
+        {% elif block.block_type == 'break' %}☕
+        {% else %}📍{% endif %}
+      </span>
+      <div>
+        <p class="text-sm font-medium text-zinc-200">{{ block.title }}</p>
+        <p class="text-xs text-zinc-500">{{ block.start_datetime.strftime('%H:%M') }} · {{ block.duration_minutes }} min</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

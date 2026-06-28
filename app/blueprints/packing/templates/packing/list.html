@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Packliste – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold text-zinc-100 mb-6">Packliste – {{ trip.title }}</h1>
+  {% if not packing_lists %}
+  <div class="text-center py-12 text-zinc-400">
+    <p class="text-4xl mb-3">🎒</p>
+    <p>Noch keine Packliste erstellt.</p>
+  </div>
+  {% else %}
+    {% for pl in packing_lists %}
+    <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-5 mb-4">
+      <h2 class="font-semibold text-zinc-100 mb-3">{{ pl.title }}</h2>
+      {% if pl.items %}
+      <ul class="space-y-2">
+        {% for item in pl.items %}
+        <li class="flex items-center gap-3 text-sm">
+          <input type="checkbox" {% if item.get('checked') %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 bg-zinc-900 border-zinc-600 rounded">
+          <span class="{{ 'line-through text-zinc-500' if item.get('checked') else 'text-zinc-200' }}">{{ item.name }}</span>
+          {% if item.get('quantity') %}<span class="text-zinc-500 ml-auto">{{ item.quantity }}x</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-zinc-500 text-sm">Keine Einträge.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

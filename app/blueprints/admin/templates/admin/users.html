@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Benutzer{% endblock %}
+{% block content %}
+<div class="p-6 max-w-3xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-zinc-100">Benutzer</h1>
+    <a href="{{ url_for('admin.create_user') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium">+ Benutzer</a>
+  </div>
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 divide-y divide-zinc-700">
+    {% for user in users %}
+    <div class="flex items-center justify-between px-4 py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold">{{ user.username[0].upper() }}</div>
+        <div>
+          <p class="text-sm font-medium text-zinc-200">{{ user.username }}</p>
+          <p class="text-xs text-zinc-500">{{ user.email }}{% if user.is_admin %} · Admin{% endif %}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs px-2 py-0.5 rounded {{ 'bg-green-900 text-green-300' if user.is_active else 'bg-zinc-700 text-zinc-400' }}">
+          {{ 'Aktiv' if user.is_active else 'Inaktiv' }}
+        </span>
+        {% if user.id != current_user.id %}
+        <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="text-xs text-zinc-400 hover:text-zinc-200">
+            {{ 'Deaktivieren' if user.is_active else 'Aktivieren' }}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
