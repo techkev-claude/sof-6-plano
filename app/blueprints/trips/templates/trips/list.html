@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Meine Reisen{% endblock %}
+{% block content %}
+<div class="p-6 max-w-5xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-zinc-100">Meine Reisen</h1>
+    <a href="{{ url_for('trips.create_trip') }}"
+       class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors">
+      <span>+</span> Neue Reise
+    </a>
+  </div>
+
+  {% if owned_trips.count() == 0 and not shared_trips %}
+    <div class="text-center py-20">
+      <span class="text-6xl">✈️</span>
+      <p class="mt-4 text-zinc-400 text-lg">Noch keine Reisen geplant.</p>
+      <a href="{{ url_for('trips.create_trip') }}"
+         class="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors">
+        Erste Reise erstellen
+      </a>
+    </div>
+  {% else %}
+    {% if owned_trips.count() > 0 %}
+    <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Meine Reisen</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      {% for trip in owned_trips %}
+      <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-5 hover:border-indigo-500/50 transition-colors group">
+        <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="block">
+          <div class="flex items-start justify-between mb-3">
+            <h3 class="font-semibold text-zinc-100 group-hover:text-indigo-300 transition-colors">{{ trip.title }}</h3>
+            <span class="text-xs text-zinc-500 ml-2 shrink-0">{{ trip.legs | length }} Etappe{{ 'n' if trip.legs | length != 1 }}</span>
+          </div>
+          {% if trip.destination %}
+          <p class="text-sm text-zinc-400 mb-2">📍 {{ trip.destination }}</p>
+          {% endif %}
+          <p class="text-xs text-zinc-500">
+            {{ trip.start_date.strftime('%d.%m.%Y') }} – {{ trip.end_date.strftime('%d.%m.%Y') }}
+          </p>
+          {% if trip.budget_total %}
+          <p class="text-xs text-zinc-500 mt-1">💰 Budget: {{ "%.0f"|format(trip.budget_total) }} {{ trip.currency }}</p>
+          {% endif %}
+        </a>
+        <div class="flex gap-2 mt-4 pt-4 border-t border-zinc-700">
+          <a href="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="text-xs text-zinc-400 hover:text-zinc-200">Bearbeiten</a>
+          <form method="POST" action="{{ url_for('trips.duplicate_trip', trip_id=trip.id) }}" class="inline">
+            {{ csrf_token() | safe if false }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="text-xs text-zinc-400 hover:text-zinc-200">Duplizieren</button>
+          </form>
+          <form method="POST" action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}"
+                class="inline ml-auto"
+                onsubmit="return confirm('Reise wirklich löschen?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="text-xs text-red-400 hover:text-red-300">Löschen</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if shared_trips %}
+    <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Geteilte Reisen</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for trip in shared_trips %}
+      <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}"
+         class="block bg-zinc-800 rounded-xl border border-zinc-700 p-5 hover:border-indigo-500/50 transition-colors group">
+        <h3 class="font-semibold text-zinc-100 group-hover:text-indigo-300 mb-1">{{ trip.title }}</h3>
+        {% if trip.destination %}<p class="text-sm text-zinc-400">📍 {{ trip.destination }}</p>{% endif %}
+        <p class="text-xs text-zinc-500 mt-2">
+          {{ trip.start_date.strftime('%d.%m.%Y') }} – {{ trip.end_date.strftime('%d.%m.%Y') }}
+        </p>
+        <span class="inline-block mt-2 text-xs bg-zinc-700 text-zinc-400 px-2 py-0.5 rounded">Geteilt</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

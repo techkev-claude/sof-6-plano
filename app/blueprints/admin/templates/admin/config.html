@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Konfiguration{% endblock %}
+{% block content %}
+<div class="p-6 max-w-3xl mx-auto">
+  <h1 class="text-2xl font-bold text-zinc-100 mb-6">System-Konfiguration</h1>
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-6">
+    <form method="POST" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="space-y-3">
+        {% for c in configs %}
+        <div class="flex items-center gap-3">
+          <label class="text-sm text-zinc-400 w-48 shrink-0">{{ c.key }}</label>
+          {% if c.key in sensitive_keys %}
+          <input type="password" name="{{ c.key }}" value="{{ c.value }}"
+                 class="flex-1 bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+          {% else %}
+          <input type="text" name="{{ c.key }}" value="{{ c.value }}"
+                 class="flex-1 bg-zinc-900 border border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-6">
+        <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors">Speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

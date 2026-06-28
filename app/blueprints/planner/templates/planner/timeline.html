@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Zeitstrahl – {{ trip.title }}{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.css">
+{% endblock %}
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-48px)] overflow-hidden" x-data="plannerApp({{ trip.id }})" x-init="init()">
+  <!-- Toolbar -->
+  <div class="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-800 shrink-0">
+    <a href="{{ url_for('trips.trip_detail', trip_id=trip.id) }}" class="text-zinc-400 hover:text-zinc-200 text-sm">← {{ trip.title }}</a>
+    <div class="flex-1"></div>
+
+    <!-- Day selector -->
+    <div class="flex gap-1 overflow-x-auto">
+      {% set start = trip.start_date %}
+      {% set end = trip.end_date %}
+      {% set day_count = (end - start).days + 1 %}
+      {% for i in range(day_count) %}
+      {% set d = start.toordinal() + i %}
+      {% set day = namespace(val=start) %}
+      <button @click="selectDay('{{ (start.toordinal() + i) }}')"
+              class="shrink-0 px-2 py-1 rounded text-xs transition-colors"
+              :class="selectedDay === '{{ (start.toordinal() + i) }}' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'">
+        Tag {{ i + 1 }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <div class="flex-1"></div>
+
+    {% if permission in ('owner', 'editor') %}
+    <button @click="undoLast()" :disabled="undoStack.length === 0"
+            class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 rounded text-xs">↩ Undo</button>
+    <button @click="saveManual()"
+            class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-medium">
+      💾 Speichern
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- Timeline -->
+  <div class="flex-1 overflow-x-auto overflow-y-hidden">
+    <div class="relative" style="width: 1440px; height: 100%;">
+      <!-- Hour labels -->
+      <div class="absolute top-0 left-0 h-8 w-full bg-zinc-950 border-b border-zinc-800 flex">
+        {% for h in range(24) %}
+        <div class="shrink-0 text-xs text-zinc-600 border-r border-zinc-800 flex items-center justify-center"
+             style="width: 60px;">{{ '%02d:00'|format(h) }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Blocks container -->
+      <div class="absolute" style="top: 32px; left: 0; right: 0; bottom: 0;">
+        {% for leg in trip.legs %}
+        <div class="relative border-b border-zinc-800" style="height: 80px;"
+             data-leg-id="{{ leg.id }}">
+          <div class="absolute left-0 top-0 bottom-0 flex items-center px-2 z-10 bg-zinc-950/80 border-r border-zinc-800"
+               style="width: 120px;">
+            <div class="w-2 h-2 rounded-full mr-2 shrink-0" style="background-color: {{ leg.color }}"></div>
+            <span class="text-xs text-zinc-400 truncate">{{ leg.title }}</span>
+          </div>
+          <!-- Time blocks -->
+          {% for block in leg.time_blocks %}
+          <div class="absolute top-2 bottom-2 rounded cursor-pointer select-none flex items-center px-2
+                      {% if block.is_fixed %}border-2 border-rose-500{% else %}border border-transparent hover:border-indigo-400{% endif %}"
+               style="left: {{ block.start_datetime.hour * 60 + block.start_datetime.minute + 120 }}px;
+                      width: {{ [block.duration_minutes, 20] | max }}px;
+                      background-color: {{ leg.color }}33;"
+               data-block-id="{{ block.id }}"
+               data-start="{{ block.start_datetime.isoformat() }}"
+               data-duration="{{ block.duration_minutes }}"
+               data-fixed="{{ block.is_fixed | lower }}"
+               :class="conflicts.includes({{ block.id }}) ? 'ring-2 ring-red-500' : ''"
+               @click="selectBlock({{ block.id }})">
+            <span class="text-xs font-medium truncate" style="color: {{ leg.color }}">
+              {% if block.block_type == 'sightseeing' %}🏛️
+              {% elif block.block_type == 'food' %}🍽️
+              {% elif block.block_type == 'transport' %}🚇
+              {% elif block.block_type == 'accommodation' %}🏨
+              {% elif block.block_type == 'break' %}☕
+              {% else %}📍{% endif %}
+              {{ block.title }}
+            </span>
+            {% if block.is_fixed %}<span class="ml-1 text-xs">🔒</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+        <!-- Current time line -->
+        <div id="current-time-line" class="absolute top-0 bottom-0 w-px bg-red-500/70 z-20 pointer-events-none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block detail panel -->
+  <div x-show="selectedBlock" x-cloak
+       class="shrink-0 bg-zinc-900 border-t border-zinc-800 p-4">
+    <p class="text-sm text-zinc-400" x-text="selectedBlock ? `Block #${selectedBlock} ausgewählt` : ''"></p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.js"></script>
+<script src="{{ url_for('static', filename='js/planner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/undo.js') }}"></script>
+{% endblock %}

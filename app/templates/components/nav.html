@@ -1,0 +1,30 @@
+{% set nav_items = [
+  ('trips.list_trips', '🗺️', 'Reisen', []),
+  ('admin.dashboard', '⚙️', 'Admin', ['is_admin']),
+] %}
+
+{% macro nav_link(endpoint, icon, label, guards) %}
+  {% set visible = true %}
+  {% for g in guards %}
+    {% if g == 'is_admin' and not current_user.is_admin %}
+      {% set visible = false %}
+    {% endif %}
+  {% endfor %}
+  {% if visible %}
+  <a href="{{ url_for(endpoint) }}"
+     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+            {% if request.endpoint and request.endpoint.startswith(endpoint.split('.')[0]) %}
+              bg-indigo-600/20 text-indigo-300
+            {% else %}
+              text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800
+            {% endif %}">
+    <span class="text-base shrink-0">{{ icon }}</span>
+    <span class="truncate" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">{{ label }}</span>
+  </a>
+  {% endif %}
+{% endmacro %}
+
+{{ nav_link('trips.list_trips', '🗺️', 'Reisen', []) }}
+{% if current_user.is_admin %}
+{{ nav_link('admin.dashboard', '⚙️', 'Admin', ['is_admin']) }}
+{% endif %}

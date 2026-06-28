@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Setup – Schritt {{ step }}{% endblock %}
+{% block content_unauthed %}
+<div class="min-h-screen bg-zinc-900 flex items-center justify-center px-4">
+  <div class="w-full max-w-lg">
+    <div class="text-center mb-8">
+      <span class="text-5xl">✈</span>
+      <h1 class="mt-3 text-2xl font-bold text-zinc-100">Plano – Ersteinrichtung</h1>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="flex items-center justify-center gap-2 mb-8">
+      {% for i in range(1, 5) %}
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+                    {% if i == step %}bg-indigo-600 text-white
+                    {% elif i < step %}bg-indigo-900 text-indigo-300
+                    {% else %}bg-zinc-700 text-zinc-400{% endif %}">
+          {{ i }}
+        </div>
+        {% if i < 4 %}<div class="w-10 h-px {% if i < step %}bg-indigo-600{% else %}bg-zinc-700{% endif %}"></div>{% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-6 shadow-xl">
+      {% set step_titles = {1: 'Admin-Benutzer erstellen', 2: 'API-Keys (optional)', 3: 'E-Mail / SMTP (optional)', 4: 'Standard-Einstellungen'} %}
+      <h2 class="text-lg font-semibold text-zinc-100 mb-5">Schritt {{ step }}: {{ step_titles[step] }}</h2>
+
+      <form method="POST" action="{{ url_for('setup.wizard', step=step) }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        {% for field in form %}
+          {% if field.widget.input_type != 'hidden' and field.id != 'submit' %}
+          <div class="mb-4">
+            {{ field.label(class="block text-sm font-medium text-zinc-300 mb-1") }}
+            {% if field.type == 'BooleanField' %}
+              <div class="flex items-center gap-2">
+                {{ field(class="w-4 h-4 text-indigo-600 bg-zinc-900 border-zinc-600 rounded") }}
+                <span class="text-sm text-zinc-400">{{ field.label.text }}</span>
+              </div>
+            {% elif field.type == 'SelectField' %}
+              {{ field(class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500") }}
+            {% else %}
+              {{ field(class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500") }}
+            {% endif %}
+            {% if field.errors %}
+              <p class="text-red-400 text-xs mt-1">{{ field.errors[0] }}</p>
+            {% endif %}
+            {% if step == 2 and field.name != 'ai_provider' and field.name != 'submit' %}
+              <p class="text-zinc-500 text-xs mt-1">Optional – kann später in Admin → Konfiguration gesetzt werden.</p>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="flex gap-3 mt-6">
+          {% if step > 1 %}
+            <a href="{{ url_for('setup.wizard', step=step-1) }}"
+               class="flex-1 text-center py-2 px-4 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm font-medium transition-colors">
+              Zurück
+            </a>
+          {% endif %}
+          <button type="submit"
+                  class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors">
+            {% if step == 4 %}Setup abschließen{% else %}Weiter{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

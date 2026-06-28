@@ -1,0 +1,40 @@
+services:
+  plano:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: plano
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8084}:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_PATH=${DB_PATH:-/app/data/plano.db}
+      - SCHEDULER_PROCESS=false
+    volumes:
+      - "${DATA_PATH:-./data}:/app/data"
+      - "${UPLOADS_PATH:-./uploads}:/app/uploads"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  plano-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: plano-scheduler
+    restart: unless-stopped
+    command: ["python", "-m", "app.scheduler_worker"]
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_PATH=${DB_PATH:-/app/data/plano.db}
+      - SCHEDULER_PROCESS=true
+    volumes:
+      - "${DATA_PATH:-./data}:/app/data"
+      - "${UPLOADS_PATH:-./uploads}:/app/uploads"
+    depends_on:
+      plano:
+        condition: service_healthy

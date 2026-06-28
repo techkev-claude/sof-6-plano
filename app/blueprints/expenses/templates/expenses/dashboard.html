@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Budget – {{ trip.title }}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-3xl mx-auto">
+  <h1 class="text-2xl font-bold text-zinc-100 mb-6">Budget – {{ trip.title }}</h1>
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-4">
+      <p class="text-sm text-zinc-400">Budget</p>
+      <p class="text-2xl font-bold text-zinc-100">{{ "%.0f"|format(trip.budget_total or 0) }} {{ trip.currency }}</p>
+    </div>
+    <div class="bg-zinc-800 rounded-xl border border-zinc-700 p-4">
+      <p class="text-sm text-zinc-400">Ausgegeben</p>
+      <p class="text-2xl font-bold {{ 'text-red-400' if total_spent > (trip.budget_total or 0) else 'text-green-400' }}">{{ "%.2f"|format(total_spent) }} EUR</p>
+    </div>
+  </div>
+  {% if not expenses %}
+  <div class="text-center py-12 text-zinc-400"><p class="text-4xl mb-3">💰</p><p>Noch keine Ausgaben.</p></div>
+  {% else %}
+  <div class="bg-zinc-800 rounded-xl border border-zinc-700 divide-y divide-zinc-700">
+    {% for e in expenses %}
+    <div class="flex items-center justify-between px-4 py-3">
+      <div>
+        <p class="text-sm font-medium text-zinc-200">{{ e.title }}</p>
+        <p class="text-xs text-zinc-500">{{ e.paid_by.username }} · {{ e.category or '–' }}</p>
+      </div>
+      <p class="font-semibold text-zinc-100">{{ "%.2f"|format(e.amount) }} {{ e.currency }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
